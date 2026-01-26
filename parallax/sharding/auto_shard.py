@@ -55,7 +55,7 @@ def get_shardings(
     A tuple of ((params_assignments, *inputs_assignments), output_assignments).
     Assignments are pytrees with the same structure as inputs.
   """
-  # TODO(b/452968881): Take axis names from current mesh.
+  # TODO(jeffcarp): Take axis names from current mesh.
   mesh = jax.sharding.get_abstract_mesh()
   if len(mesh.axis_names) != 2:
     raise ValueError('Autosharding currently requires a mesh of rank 2.')

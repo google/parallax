@@ -9,7 +9,7 @@ import numpy as np
 Mesh = jax.sharding.Mesh
 NamedSharding = jax.sharding.NamedSharding
 
-# TODO(b/452969631): Integrate into main sharding APIs.
+# TODO(jeffcarp): Integrate into main sharding APIs.
 
 
 def apply_sharding_constraints(f, sharding_config):

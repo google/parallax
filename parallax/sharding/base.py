@@ -128,7 +128,7 @@ class JitWrapped:
   """Wraps a function and sharding info."""
 
   def __init__(self, func, strategy, kwargs):
-    # TODO(b/452969631): Enforce `params` as first arg to `func`.
+    # TODO(jeffcarp): Enforce `params` as first arg to `func`.
     self.func = func
     self.strategy = strategy
     self.kwargs = kwargs
