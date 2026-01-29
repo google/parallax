@@ -1,0 +1,45 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "google-parallax"
+version = "0.0.1"
+authors = [
+  { name="Jeff Carpenter", email="code@jeffcarp.com" },
+  { name="Stella Yan", email="sueyan@gmail.com" },
+]
+description = "A library for autoscaling JAX models."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = {file = "LICENSE"}
+dependencies = [
+  "flax",
+  "jax",
+]
+
+[tool.hatch.build]
+include = [
+  "src/*"
+]
+exclude = [
+  "**/*_test.py"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["parallax"]
+
+[project.urls]
+Homepage = "https://github.com/google/parallax"
+Issues = "https://github.com/google/parallax/issues"
+
+[project.optional-dependencies]
+dev = [
+  "absl-py",
+  "numpy",
+  "optax",
+]
