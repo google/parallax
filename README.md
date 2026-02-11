@@ -71,3 +71,16 @@ pull requests and report bugs.
 
 If you encounter any issues, please report them on our [GitHub
 Issues](https://github.com/google/parallax/issues) page.
+
+## Citing Parallax
+
+To cite Parallax please use this citation:
+
+```bibtex
+@software{parallax2026,
+  title = {{Parallax}},
+  author = {Carpenter, Jeff and Yan, Stella and Liu, Dangyi and others},
+  year = {2026},
+  url = {https://github.com/google/parallax},
+}
+```
