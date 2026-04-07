@@ -100,8 +100,8 @@ class OffloadModelTest(parameterized.TestCase):
     np.testing.assert_array_equal(act_loss, exp_loss)
     # Assert all model weights match after gradient update.
     np.testing.assert_allclose(
-        actual_model.layers[0].kernel.value,
-        reference_model.layers[0].kernel.value,
+        actual_model.layers[0].kernel[...],
+        reference_model.layers[0].kernel[...],
         atol=1e-3,
         rtol=1e-1,
     )
