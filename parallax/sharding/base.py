@@ -37,6 +37,14 @@ class ShardingStrategy(enum.Enum):
   MANUAL = 'manual'
 
 
+def _constrain_or_reshard(x: PyTree, sharding: PyTree) -> PyTree:
+  mesh = jax.sharding.get_abstract_mesh()
+  if not mesh.empty and mesh.are_all_axes_explicit:
+    return jax.reshard(x, sharding)
+  else:
+    return jax.lax.with_sharding_constraint(x, sharding)
+
+
 def create_sharded_model(
     model_or_fn: nn.Module | Callable[[], nnx.Module],
     sample_inputs: Any,
@@ -77,7 +85,7 @@ def create_sharded_model(
         model.apply, variables, *sample_inputs, **kwargs
     )
 
-    sharded_params = jax.lax.with_sharding_constraint(variables, params_shd)
+    sharded_params = _constrain_or_reshard(variables, params_shd)
     return sharded_params
   else:
     # Support for Flax NNX models.
@@ -92,7 +100,7 @@ def create_sharded_model(
         return nnx.merge(graphdef, state)(*inputs)
 
       (params_shd, _), _ = get_shardings_fn(fn, state, *sample_inputs, **kwargs)
-      sharded_state = jax.lax.with_sharding_constraint(state, params_shd)
+      sharded_state = _constrain_or_reshard(state, params_shd)
       nnx.update(model, sharded_state)
       return model
 
