@@ -86,14 +86,18 @@ def get_shardings(
   params_assignments = []
   for var in jaxpr.jaxpr.invars[: len(params_flat)]:
     params_assignments.append([])
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    dim_sharded= False
+    for i in range(var.aval.ndim - 1, -1, -1):  # pytype: disable=attribute-error
       root = graph.get_root((var, i))
-      if (model_axis is not None and (root, model_axis) in edges) or var.aval.shape[i] < min_shard_size:  # pytype: disable=attribute-error
+      if ((model_axis is None) or 
+         ((root, model_axis) in edges) or 
+         (var.aval.shape[i] < min_shard_size) or 
+         dim_sharded):
         params_assignments[-1].append(None)  # conflict with model axis
-      else:
-        params_assignments[-1].append(
-            model_axis_name if model_axis is not None else None
-        )
+      else:  # Assign model axis if not already sharded
+        params_assignments[-1].append(model_axis_name)
+        dim_sharded = True
+    params_assignments[-1].reverse() 
   params_assignments = params_treedef.unflatten(params_assignments)
 
   inputs_assignments = []
