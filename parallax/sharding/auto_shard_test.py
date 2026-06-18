@@ -13,17 +13,31 @@
 # limitations under the License.
 import os
 
+from absl.testing import absltest
+from absl.testing import parameterized
 from flax import nnx
 import jax
 import jax.numpy as jnp
 from parallax.examples import models
 from parallax.sharding import auto_shard
 
-from absl.testing import absltest
-from absl.testing import parameterized
-
 NamedSharding = jax.sharding.NamedSharding
 P = jax.sharding.PartitionSpec
+
+
+class ResidualBlockModel(nnx.Module):
+
+  def __init__(self, rngs: nnx.Rngs):
+    self.linear1 = nnx.Linear(128, 64, rngs=rngs)
+    self.linear2 = nnx.Linear(64, 32, rngs=rngs)
+    self.linear3 = nnx.Linear(96, 8, rngs=rngs)
+
+  def __call__(self, x):
+    z1 = self.linear1(x)
+    z2 = self.linear2(z1)
+    z1_z2 = jnp.concatenate([z2, z1], axis=-1)
+    z3 = self.linear3(z1_z2)
+    return z3
 
 
 class AutoShardTest(parameterized.TestCase):
@@ -277,6 +291,29 @@ class AutoShardTest(parameterized.TestCase):
     self.assertEqual(model_shd, expected_assignments[0])
     self.assertEqual(in_shd, expected_assignments[1])
     self.assertEqual(out_shd, expected_assignments[2])
+
+  def test_residual_block_w3_conflict(self):
+    model = ResidualBlockModel(rngs=nnx.Rngs(0))
+    inputs = (jnp.ones((32, 128)),)
+    graphdef, state = nnx.split(model)
+
+    def fn(state, *inputs):
+      model = nnx.merge(graphdef, state)
+      return model(*inputs)
+
+    (model_shd, *in_shd), out_shd = auto_shard.get_shardings(
+        fn, state, *inputs, min_shard_size=0
+    )
+    model_shd = nnx.to_pure_dict(model_shd)
+
+    expected_model_shd = {
+        'linear1': {'bias': P('model'), 'kernel': P(None, 'model')},
+        'linear2': {'bias': P(None), 'kernel': P('model', None)},
+        'linear3': {'bias': P('model'), 'kernel': P(None, 'model')},
+    }
+    self.assertEqual(model_shd, expected_model_shd)
+    self.assertEqual(in_shd, [P('data', None)])
+    self.assertEqual(out_shd, P('data', None))
 
 
 if __name__ == '__main__':

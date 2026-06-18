@@ -220,6 +220,15 @@ class BaseTest(parameterized.TestCase):
     )
     self.assertDictEqual(actual_shardings, expected_shardings)
 
+  def test_create_sharded_model_explicit_mesh(self):
+    mesh = jax.make_mesh((2, 4), ('data', 'model'))
+    with jax.set_mesh(mesh):
+      model = base.create_sharded_model(
+          lambda: models.SimpleMLP(8, 16, 8, rngs=nnx.Rngs(0)),
+          sample_inputs=(jnp.ones((8, 8)),),
+      )
+      self.assertIsNotNone(model)
+
   def test_sharded_nnx_optimizer_training_loop(self):
     """Ensures create_sharded_model works within an NNX training loop."""
     dummy_inputs, dummy_labels = jnp.ones((4, 16)), jnp.ones((4, 16))
