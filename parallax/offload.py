@@ -104,7 +104,7 @@ def offload_forward(
   # example element 0 is the inputs to layer 0. The last element of the array
   # are the final outputs (which become the inputs to the loss function).
   saved_intermediates = [inputs]
-  for chunk in model.layers:
+  for chunk in model.layers:  # pyrefly: ignore[missing-attribute]
     logits = forward(chunk, saved_intermediates[-1])
     saved_intermediates.append(logits)
 
@@ -132,14 +132,14 @@ def offload_backward(
     A full nnx.State mapping representing a composite of the grads from all
     layers.
   """
-  if len(saved_intermediates) != len(model.layers) + 1:
+  if len(saved_intermediates) != len(model.layers) + 1:  # pyrefly: ignore[missing-attribute]
     raise ValueError(
         'The length of `saved_intermediates` must match the number of model '
         'layers plus one.'
     )
 
   layer_grads = {}
-  for i, chunk in reversed(list(enumerate(model.layers))):
+  for i, chunk in reversed(list(enumerate(model.layers))):  # pyrefly: ignore[missing-attribute]
     # pylint: disable=cell-var-from-loop
     chunk_input = saved_intermediates[i]
     graphdef, state = nnx.split(chunk)
@@ -189,13 +189,13 @@ def remat_model(model: nnx.Module) -> nnx.Module:
   """Takes an NNX Module and returns one with all layers rematerialized."""
   # TODO(jeffcarp): Generalize this to work with non-Sequential models.
   new_model = nnx.clone(model)
-  for i, layer in enumerate(new_model.layers):
+  for i, layer in enumerate(new_model.layers):  # pyrefly: ignore[missing-attribute]
     signature = inspect.signature(layer.__call__)
     unbound_call = layer.__class__.__call__
     # Shift static_argnums by 1 because of `self` in unbound call.
     static_argnums = tuple(i + 1 for i in range(1, len(signature.parameters)))
     rematted_call = nnx.remat(unbound_call, static_argnums=static_argnums)
-    new_model.layers[i] = RemattedLayer(layer, rematted_call)
+    new_model.layers[i] = RemattedLayer(layer, rematted_call)  # pyrefly: ignore[missing-attribute]
   return new_model
 
 

@@ -90,7 +90,7 @@ def get_shardings(
     for i in range(var.aval.ndim - 1, -1, -1):  # pytype: disable=attribute-error
       root = graph.get_root((var, i))
       if (
-          (model_axis is None)
+          (model_axis is None)  # pyrefly: ignore[unbound-name]
           or ((root, model_axis) in edges)
           or (var.aval.shape[i] < min_shard_size)
           or dim_sharded

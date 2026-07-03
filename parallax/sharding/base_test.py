@@ -53,7 +53,7 @@ class BaseTest(parameterized.TestCase):
       return model.apply(params, inputs)
 
     output = forward(params, x)
-    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)
+    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)  # pyrefly: ignore[bad-argument-type]
 
     # Verify compiled shardings.
     compiled = forward.lower(params, x).compile()  # type: ignore
@@ -84,7 +84,7 @@ class BaseTest(parameterized.TestCase):
       return model.apply(params, inputs)
 
     output = forward(params, x)
-    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)
+    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)  # pyrefly: ignore[bad-argument-type]
 
     # Verify compiled shardings.
     compiled = forward.lower(params, x).compile()  # type: ignore
@@ -115,7 +115,7 @@ class BaseTest(parameterized.TestCase):
 
     sharded_forward = base.jit(forward, strategy=base.ShardingStrategy.DDP)
     output = sharded_forward(params, x)
-    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)
+    np.testing.assert_array_almost_equal(output, reference_output, decimal=6)  # pyrefly: ignore[bad-argument-type]
 
     # Verify compiled shardings.
     compiled = sharded_forward.lower(params, x).compile()  # type: ignore
