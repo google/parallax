@@ -71,13 +71,13 @@ def get_shardings(
   # Assign the mostly seen axis as "model" axis.
   seen = collections.Counter()
   for var in jaxpr.jaxpr.invars[: len(params_flat)]:
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       seen.update([graph.get_root((var, i))])
       model_axis = max(seen, key=lambda x: seen[x]) if seen else None
   # Axes in inputs that are never seen in params are "data" axes.
   data_axes = []
   for var in jaxpr.jaxpr.invars[len(params_flat) :]:
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
       if root not in seen and root not in data_axes:
         data_axes.append(root)
@@ -87,12 +87,12 @@ def get_shardings(
   for var in jaxpr.jaxpr.invars[: len(params_flat)]:
     params_assignments.append([])
     dim_sharded = False
-    for i in range(var.aval.ndim - 1, -1, -1):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim - 1, -1, -1):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
       if (
           (model_axis is None)  # pyrefly: ignore[unbound-name]
           or ((root, model_axis) in edges)
-          or (var.aval.shape[i] < min_shard_size)
+          or (var.aval.shape[i] < min_shard_size)  # pyrefly: ignore[missing-attribute]
           or dim_sharded
       ):
         params_assignments[-1].append(None)  # conflict with model axis
@@ -105,9 +105,9 @@ def get_shardings(
   inputs_assignments = []
   for var in jaxpr.jaxpr.invars[len(params_flat) :]:
     inputs_assignments.append([])
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
-      if root in data_axes and var.aval.shape[i] >= min_shard_size:  # pytype: disable=attribute-error
+      if root in data_axes and var.aval.shape[i] >= min_shard_size:  # pyrefly: ignore[missing-attribute]
         name = (
             data_axis_name
             if len(data_axes) == 1
@@ -121,9 +121,9 @@ def get_shardings(
   output_assignments = []
   for var in jaxpr.jaxpr.outvars:
     output_assignments.append([])
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
-      if root in data_axes and var.aval.shape[i] >= min_shard_size:  # pytype: disable=attribute-error
+      if root in data_axes and var.aval.shape[i] >= min_shard_size:  # pyrefly: ignore[missing-attribute]
         name = (
             data_axis_name
             if len(data_axes) == 1
@@ -158,14 +158,14 @@ def analyze_same_axes(fn, *inputs):
   assignments = {}
   for var in jaxpr.jaxpr.invars:
     invars.append([])
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
       if root not in assignments:
         assignments[root] = len(assignments)
       invars[-1].append(assignments[root])
   for var in jaxpr.jaxpr.outvars:
     outvars.append([])
-    for i in range(var.aval.ndim):  # pytype: disable=attribute-error
+    for i in range(var.aval.ndim):  # pyrefly: ignore[missing-attribute]
       root = graph.get_root((var, i))
       if root not in assignments:
         assignments[root] = len(assignments)
@@ -418,7 +418,7 @@ def _parse_jaxpr(jaxpr) -> data_structures.MergeableGraph:
 
   # Generically add edge between all pairs of axes in the invars.
   for var in jaxpr.jaxpr.invars:
-    for i, j in itertools.combinations(range(var.aval.ndim), 2):  # pytype: disable=attribute-error
+    for i, j in itertools.combinations(range(var.aval.ndim), 2):
       graph.add_edge((var, i), (var, j))
 
   # Generically add edge between all pairs of axes for each output variable
