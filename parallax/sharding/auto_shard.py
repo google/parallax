@@ -92,7 +92,7 @@ def get_shardings(
       if (
           (model_axis is None)  # pyrefly: ignore[unbound-name]
           or ((root, model_axis) in edges)
-          or (var.aval.shape[i] < min_shard_size)
+          or (var.aval.shape[i] < min_shard_size)  # pyrefly: ignore[missing-attribute]
           or dim_sharded
       ):
         params_assignments[-1].append(None)  # conflict with model axis
