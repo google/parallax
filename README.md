@@ -1,81 +1,97 @@
 # Parallax
 
-**Parallax** is a library for automatically scaling JAX models. It simplifies
-the process of training large models by offering automatic parallelism
-strategies and memory optimizations, allowing you to focus on your model
-architecture rather than sharding configurations.
+[![PyPI](https://img.shields.io/pypi/v/google-parallax)](https://pypi.org/project/google-parallax/)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/google/parallax/blob/main/docs/getting_started.ipynb)
 
-**Parallax helps you:**
+Parallax is a library for easily scaling off-the-shelf JAX models. It includes
+optimizations in two main categories:
 
-*   **Automatically shard** your JAX models and functions without manually
-    defining `PartitionSpec`s.
-*   **Apply advanced parallelism** strategies like Fully Sharded Data Parallel
-    (FSDP) and Distributed Data Parallel (DDP) with ease.
-*   **Optimize memory usage** through model offloading (keeping weights in CPU
-    RAM) and rematerialization.
+*   **Parallelism**:
+    *   **AutoSharding**: Automatically determine `PartitionSpecs` for JAX
+        Models and Functions.
+    *   **Sharding Recipes**: Apply Distributed Data Parallel (DDP) or Fully
+        Sharded Data Parallel (FSDP) to JAX models.
+*   **Memory optimizations**:
+    *   **Model Offloading**: Keep model weights in CPU RAM and stream to
+        TPU/GPU HBM as needed.
+    *   **Rematerialization**: Intentionally recompute activations to save HBM
+        space.
 
-With Parallax, you can scale off-the-shelf JAX models to run on larger hardware
-configurations or fit larger models on existing hardware without extensive code
-modifications.
+The ethos of Parallax is **humans shouldn't be writing their own
+[`Mesh`](https://docs.jax.dev/en/latest/jax.sharding.html#jax.sharding.Mesh) or
+[`PartitionSpec`](https://docs.jax.dev/en/latest/jax.sharding.html#jax.sharding.PartitionSpec)**
+&mdash; computers are much better at discovering optimal sharding strategies, so
+let them do the hard work.
 
 > This is not an officially supported Google product. This project is not
 > eligible for the
 > [Google Open Source Software Vulnerability Rewards Program](
   https://bughunters.google.com/open-source-security).
 
-## Installation
+## Why Parallax?
 
-You can install Parallax using pip:
+With plain JAX, you write sharding rules for every parameter by hand. Parallax
+does that work for you and lets you take over where you need to:
 
-```bash
+| Task                       | Manual JAX                                        | Parallax                                              |
+| -------------------------- | ------------------------------------------------- | ----------------------------------------------------- |
+| Choose parameter shardings | Write `PartitionSpec` rules by hand               | `strategy=parallax.ShardingStrategy.AUTO`             |
+| Apply DDP or FSDP          | Write sharding rules for each model               | `strategy=parallax.ShardingStrategy.DDP` (or `.FSDP`) |
+| Rematerialize activations  | Wrap layers with [`jax.checkpoint`](https://docs.jax.dev/en/latest/_autosummary/jax.checkpoint.html) | `parallax.remat_model(model)` (sequential models) |
+| Offload weights            | Manage [memory kinds](https://docs.jax.dev/en/latest/201/memory-spaces.html#building-blocks) and transfers | `parallax.offload_model(model, ...)` |
+
+Parallax is most useful for large models, or when you want to try different
+parallelism strategies without rewriting your model.
+
+## Install Parallax
+
+Install the latest release of Parallax from
+[PyPI](https://pypi.org/project/google-parallax/):
+
+```sh
 pip install google-parallax
 ```
 
 ## Usage
 
-Parallax integrates seamlessly with [Flax
-NNX](https://flax.readthedocs.io/en/latest/index.html) models. Here is a simple
-example of how to use auto-sharding:
+Parallax integrates seamlessly with
+[Flax NNX](https://flax.readthedocs.io/en/latest/index.html) models. Here is a
+simple example of how to use auto-sharding:
 
 ```python
-import parallax
-from flax import nnx
 import jax
 import jax.numpy as jnp
+from flax import nnx
 
-model  = parallax.create_sharded_model(
-    model_or_fn=lambda: Model(...),
-    sample_inputs=(jnp.ones((1, 32)),),
-    strategy=parallax.ShardingStrategy.AUTO,
-    data_axis_name='fsdp',
-    model_axis_name='tp',
-)
+import parallax
+
+with jax.set_mesh(mesh):  # a 2D mesh with 'fsdp' and 'tp' axes
+  model = parallax.create_sharded_model(
+      model_or_fn=lambda: Model(...),
+      sample_inputs=(jnp.ones((1, 32)),),
+      strategy=parallax.ShardingStrategy.AUTO,
+      data_axis_name='fsdp',
+      model_axis_name='tp',
+  )
 ```
 
-## Features
-
-*   **AutoSharding**: Automatically discover optimal sharding strategies.
-*   **FSDP & DDP**: Ready-to-use implementations of common parallel training
-    strategies.
-*   **Model Offloading**: Stream model weights from CPU to device memory to
-    train larger models.
-*   **Rematerialization**: Automatic activation recomputation to save memory.
-
-## Contributing
-
-We welcome contributions! Please check
-[`docs/contributing.md`](docs/contributing.md) for details on how to submit
-pull requests and report bugs.
+For a complete, runnable example, see the
+[Getting Started notebook](docs/getting_started.ipynb).
 
 ## Support
 
-If you encounter any issues, please report them on our [GitHub
-Issues](https://github.com/google/parallax/issues) page.
+For questions, bug reports, or feature requests, please open an issue on
+[GitHub Issues](https://github.com/google/parallax/issues).
+
+## Contribute
+
+To contribute to Parallax, see the [contributing guide](docs/contributing.md).
 
 ## Citing Parallax
 
 To cite Parallax please use this citation:
 
+<!-- disableFinding(SNIPPET_INVALID_LANGUAGE) -->
 ```bibtex
 @software{parallax2026,
   title = {{Parallax}},
